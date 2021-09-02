@@ -23,11 +23,14 @@ def compare_tasks(directory_names):
             previous_info_length = len(previous_info)
 
             if( latest_info_length > previous_info_length):
-
+                # data yg akan ditambahkan ke to_do
                 data_to_be_assigned = latest_info[previous_info_length - latest_info_length:]
                 for i in data_to_be_assigned:
                     i['course_name'] = directory_name
-                    to_do.append(i)
+                    # jika i belum ada di dalam to_do tambahkan
+                    # i ke to_do
+                    if(not i in to_do):
+                        to_do.append(i)
                 
                 write_json_file(os.getcwd()+f'/course-info/{directory_name}/{directory_name}_info_latest.json',latest_info)
 

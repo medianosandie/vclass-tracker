@@ -6,10 +6,10 @@ from get_home_page_content import get_home_page_content
 from get_course_list import get_course_list 
 from get_course_page_content import get_course_page_content 
 from compare_tasks import compare_tasks
-from utility_functions import write_json_file,read_json_file
+from utility_functions import write_json_file,read_json_file,read_txt_file
 
 def main_menu(data,item_links):
-    menus = ['update course list','show course list','track courses','compare tasks','show to-do','open-link','exit']
+    menus = ['update course list','show course list','track courses for new task','show tasks','compare tasks','show to-do','open-link','exit']
     menus_str = ''.join([(f'\n  {index+1}. {i}') for index,i in enumerate(menus)])
     title = '==========vclass-tracker=========='.upper()
     print(f'{title}{menus_str}')
@@ -70,23 +70,26 @@ def main_menu(data,item_links):
             print('courses berhasil di track')
             main_menu(data,item_links)
 
-        # compare tasks
+        # show tasks
         elif(user_input == 4):
+            tasks_menu()
+            main_menu(data,item_links)
+
+        # compare tasks
+        elif(user_input == 5):
             print('comparing tasks...')
 
             directory_names = [i['directory_name'] for i in data]
             compare_tasks(directory_names)
             print('tasks berhasil di compare')
-            print('tasks berhasil di compare, silahkan pilih "4. show to-do" di menu\nuntuk mengecek task terbaru\n')
+            print('tasks berhasil di compare, silahkan pilih "show to-do" di menu\nuntuk mengecek task terbaru\n')
             main_menu(data,item_links)
 
         # show to-do
-        elif(user_input == 5):
+        elif(user_input == 6):
 
             to_do = []
             if( os.path.exists('to_do.json') ):
-                # with open('to_do.json') as json_file:
-                #     to_do = json.load(json_file)
                 to_do = read_json_file('to_do.json')
 
                 # mengecek apakah to_do tidak kosong
@@ -101,7 +104,7 @@ def main_menu(data,item_links):
             to_do_menu(data,item_links)
 
         # buka link
-        elif(user_input == 6):
+        elif(user_input == 7):
 
             cwd = os.getcwd()
             url = input('masukkan url yg ingin dituju : ')
@@ -142,9 +145,6 @@ def to_do_menu(data,item_links):
     else:
         print(f'selected menu -> "{user_input}. {menus[user_input-1]}"')
 
-        to_do = []
-        # with open('to_do.json') as json_file:
-        #     to_do = json.load(json_file)
         to_do = read_json_file('to_do.json')
 
         # hapus task
@@ -167,9 +167,6 @@ def to_do_menu(data,item_links):
             
             else:
                 to_do.pop(no_urut_task-1)
-                # with open('to_do.json','w') as wf:
-                #     for line in json.dumps(to_do,indent=4,sort_keys=True):
-                #         wf.write(line)
                 write_json_file('to_do.json',to_do)
 
                 print('task berhasil dihapus')
@@ -179,9 +176,6 @@ def to_do_menu(data,item_links):
         # hapus semua task
         if( user_input == 2 ):
             to_do = []
-            # with open('to_do.json','w') as wf:
-            #         for line in json.dumps(to_do,indent=4,sort_keys=True):
-            #             wf.write(line)
             write_json_file('to_do.json',to_do)
 
             print('-----------------------------')
@@ -213,3 +207,42 @@ def show_empty_course_list_message():
     print('------------------')
     print('course list kosong')
     print('------------------')
+
+def tasks_menu():
+    print('')
+    course_list  = read_json_file('course_list.json')
+    menus = [i["item_name"] for i in course_list]
+    menus_str = ''.join([(f'\n  {index+1}. {i}') for index,i in enumerate(menus)])
+    title = '==========tasks menu=========='.upper()
+    print(f'{title}{menus_str}')
+    print('==================================')
+    user_input = ''
+    try:
+        user_input = int(input('masukkan nomor urut dari course yg tasks-nya ingin ditampilkan : '))
+    except ValueError:
+        print(f'input salah!, tidak menerima input selain angka\n')
+        tasks_menu()
+        return
+
+    available_input = [i for i in range(1,len(menus)+1)]
+
+    if( not (user_input in available_input) ):
+        print(f'angka yang boleh dimasukkan hanya 1-{len(menus)} !\n')
+        tasks_menu()
+        return
+    
+    else:
+        print(f'selected menu -> "{user_input}. {menus[user_input-1]}"')
+
+        show_tasks(user_input)
+
+def show_tasks(index):
+    course_list  = read_json_file('course_list.json')
+    directory_name = course_list[index-1]["directory_name"]
+    txt_file_path = f'course-info/{directory_name}/{directory_name}_info.txt'
+    tasks = read_txt_file(txt_file_path)
+
+    item_name = course_list[index-1]["item_name"]
+    print(f'----------------------------------\n{item_name.upper()}\n')
+    print(tasks)
+    print('----------------------------------')

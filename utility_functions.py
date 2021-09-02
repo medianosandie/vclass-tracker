@@ -15,3 +15,8 @@ def write_txt_file(txt_file_name,data):
     with open(txt_file_name,'w') as wf:
         for line in data:
             wf.write(line)
+
+def read_txt_file(txt_file_name):
+    with open(txt_file_name,'r') as rf:
+        f_contents = rf.read()
+    return f_contents
