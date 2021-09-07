@@ -1,3 +1,0 @@
-
-jika sudah ada nama topic yang sama di file to_do tidak usah
-di copy
