@@ -1,5 +1,4 @@
-import os
-import json
+import os,json
 
 def write_json_file(json_file_name,data):
     with open(json_file_name,'w') as wf:

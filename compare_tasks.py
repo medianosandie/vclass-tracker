@@ -1,5 +1,4 @@
-import os
-import json
+import os,json
 from utility_functions import write_json_file,read_json_file
 
 def compare_tasks(directory_names):

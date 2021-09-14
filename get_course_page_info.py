@@ -1,6 +1,5 @@
 from bs4 import BeautifulSoup as bs
-import os
-import json
+import os,json
 
 from utility_functions import write_json_file,read_json_file,write_txt_file
 
@@ -25,7 +24,8 @@ def get_course_page_info(course_page_content):
             task_link = i['href']
             tasks.append({'task_name':task_name,'task_link':task_link})
         
-        course_items.append({'item_name':item_name,'tasks':tasks})
+        if(not('Topic' in item_name)):
+            course_items.append({'item_name':item_name,'tasks':tasks})
 
     index = 1
     course_items_str = ''

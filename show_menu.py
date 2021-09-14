@@ -1,6 +1,4 @@
-import json
-import os
-import webbrowser
+import json,os,webbrowser,requests
 
 from get_home_page_content import get_home_page_content 
 from get_course_list import get_course_list 
@@ -9,44 +7,50 @@ from compare_tasks import compare_tasks
 from utility_functions import write_json_file,read_json_file,read_txt_file
 
 def main_menu(data,item_links):
-    menus = ['update course list','show course list','track courses for new task','show tasks','compare tasks','show to-do','open-link','exit']
+    menus = ['perbarui daftar matakuliah','tampilkan daftar matakuliah','cek halaman matakuliah','tampilkan daftar tugas','cek tugas terbaru','tampilkan daftar tugas terbaru','buka tautan','keluar']
     menus_str = ''.join([(f'\n  {index+1}. {i}') for index,i in enumerate(menus)])
-    title = '==========vclass-tracker=========='.upper()
+    title = '\n===============vclass-tracker================'.upper()
     print(f'{title}{menus_str}')
-    print('==================================')
+    print('==============================================')
     user_input = ''
     try:
-        user_input = int(input('masukkan angka : '))
+        user_input = int(input('masukkan angka dari menu yang ingin dipilih : '))
     except ValueError:
-        print(f'input salah!, tidak menerima input selain angka\n')
+        input_invalid_other_than_number_message()
         main_menu(data,item_links)
         return
 
     available_input = [i for i in range(1,len(menus)+1)]
 
     if( not (user_input in available_input) ):
-        print(f'angka yang boleh dimasukkan hanya 1-{len(menus)} !\n')
+        input_invalid_out_of_range_message(menus)
         main_menu(data,item_links)
         return
     
     else:
-        print(f'selected menu -> "{user_input}. {menus[user_input-1]}"')
+        print(f'\nmenu yang dipilih -> "{user_input}. {menus[user_input-1]}"\n')
         
         # handle userinput
-        # update courses
+        # perbarui daftar matakuliah
         if(user_input == 1):
-            print('updating courses...')
+            try:
+                print('menmperbarui daftar matakuliah...')
+                
+                home_page_content = get_home_page_content()
+                course_list = get_course_list(home_page_content)
+
+                # buat file json
+                write_json_file('course_list.json',course_list)
+                print('\n------------------------------------------------\n')
+                print('daftar matakuliah berhasil di perbarui, pilih menu \n"2. tampilkan daftar matakuliah" untuk melihat daftar matakuliah')
+                print('\n------------------------------------------------\n')
             
-            home_page_content = get_home_page_content()
-            course_list = get_course_list(home_page_content)
-
-            # buat file json
-            write_json_file('course_list.json',course_list)
-
-            print('courses berhasil di update')
+            except requests.exceptions.ConnectionError:
+                check_your_connection_message()
+            
             main_menu(data,item_links)
 
-        # show course list
+        # tampilkan daftar matakuliah
         elif(user_input == 2):
             if(os.path.exists('course_list.json')):
                 course_list = read_json_file('course_list.json')
@@ -61,49 +65,78 @@ def main_menu(data,item_links):
             
             main_menu(data,item_links)
 
-        # track courses
+        # cek halaman matakuliah
         elif(user_input == 3):
-            print('tracking...')
+            try:
+                print('sedang mengecek...')
 
-            get_course_page_content(item_links)
+                get_course_page_content(item_links)
 
-            print('courses berhasil di track')
+                print('halaman matakuliah berhasil dicek')
+
+            except requests.exceptions.ConnectionError:
+                check_your_connection_message()
+            
             main_menu(data,item_links)
 
-        # show tasks
+        # tampilkan daftar tugas
         elif(user_input == 4):
-            tasks_menu()
+
+            if( os.path.exists('course-info') ):
+                tasks_menu()
+            else:
+                print('\n--------------------------------------')
+                print('cek halaman matakuliah terlebih dahulu') 
+                print('untuk menampilkan daftar tugas, pilih')
+                print('"3. cek halaman matakuliah" di menu')
+                print('untuk mengecek')
+                print('--------------------------------------\n')
+
             main_menu(data,item_links)
 
-        # compare tasks
+        # cek tugas terbaru
         elif(user_input == 5):
-            print('comparing tasks...')
+            try:
+                print('mengecek tugas terbaru...')
 
-            directory_names = [i['directory_name'] for i in data]
-            compare_tasks(directory_names)
-            print('tasks berhasil di compare')
-            print('tasks berhasil di compare, silahkan pilih "show to-do" di menu\nuntuk mengecek task terbaru\n')
+                directory_names = [i['directory_name'] for i in data]
+                compare_tasks(directory_names)
+                print('\n--------------------------------------------------------------------')
+                print('tugas terbaru berhasil dicek, silahkan pilih "6. tampilkan daftar\ntugas terbaru" di menu untuk melihat daftar tugas terbaru')
+                print('--------------------------------------------------------------------\n')
+
+            except FileNotFoundError:
+                print('\n----------------------------------------------------------------------')
+                print('file tidak ditemukan, cek halaman matakuliah terlebih dahulu \nuntuk mengecek tugas terbaru!')
+                print('----------------------------------------------------------------------\n')
+            
             main_menu(data,item_links)
 
-        # show to-do
+        # tampilkan daftar tugas terbaru
         elif(user_input == 6):
 
             to_do = []
             if( os.path.exists('to_do.json') ):
-                to_do = read_json_file('to_do.json')
+                try:
+                    to_do = read_json_file('to_do.json')
+                except:
+                    pass
 
                 # mengecek apakah to_do tidak kosong
                 if(len(to_do)>0):
                     show_to_do(to_do)
+                    to_do_menu(data,item_links)
+
                 else:
                     show_empty_to_do_message()
+                    main_menu(data,item_links)
+                
 
             else:
                 show_empty_to_do_message()
+                main_menu(data,item_links)
 
-            to_do_menu(data,item_links)
-
-        # buka link
+        # buka tautan
         elif(user_input == 7):
 
             cwd = os.getcwd()
@@ -112,75 +145,90 @@ def main_menu(data,item_links):
             os.chdir("C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python37\\Scripts")
 
             webbrowser.open(url)
-            print('opening url...')
+            print('membuka tautan...')
             os.chdir(cwd)
+            print('\n----------------------')
+            print('tautan berhasil dibuka')
+            print('----------------------\n')
             main_menu(data,item_links)
 
         else:
-            print('exitting program...')
+            print('keluar...')
             return
 
 def to_do_menu(data,item_links):
     print('')
-    menus = ['hapus task','hapus semua task','kembali ke main menu']
+    menus = ['hapus tugas','hapus semua tugas','kembali ke main menu']
     menus_str = ''.join([(f'\n  {index+1}. {i}') for index,i in enumerate(menus)])
-    title = '==========to do menu=========='.upper()
+    title = '========menu daftar tugas terbaru========'.upper()
     print(f'{title}{menus_str}')
-    print('==================================')
+    print('=========================================')
     user_input = ''
     try:
-        user_input = int(input('masukkan angka : '))
+        user_input = int(input('masukkan angka dari menu yang ingin dipilih : '))
     except ValueError:
-        print(f'input salah!, tidak menerima input selain angka\n')
+        input_invalid_other_than_number_message()
         to_do_menu(data,item_links)
         return
 
     available_input = [i for i in range(1,len(menus)+1)]
 
     if( not (user_input in available_input) ):
-        print(f'angka yang boleh dimasukkan hanya 1-{len(menus)} !\n')
+        input_invalid_out_of_range_message(menus)
         to_do_menu(data,item_links)
         return
     
     else:
-        print(f'selected menu -> "{user_input}. {menus[user_input-1]}"')
+        print(f'\nmenu yang dipilih -> "{user_input}. {menus[user_input-1]}"\n')
+        
+        to_do = []
+        try:
+            to_do = read_json_file('to_do.json')
+        except:
+            pass
 
-        to_do = read_json_file('to_do.json')
-
-        # hapus task
+        # hapus tugas
         if( user_input == 1 ):
-            no_urut_task = ''
+            no_urut_tugas = ''
             try:
-                no_urut_task = int(input('masukkan nomor urut task yang ingin dihapus : '))
+                no_urut_tugas = int(input('masukkan nomor urut tugas yang ingin dihapus : '))
             except ValueError:
-                print(f'input salah!, tidak menerima input selain angka\n')
+                input_invalid_other_than_number_message()
                 to_do_menu(data,item_links)
                 return
+            
+            
+
 
             available_input = [ i for i in range(1,len(to_do)+1) ]
-            print(available_input)
 
             if( not (user_input in available_input) ):
-                print(f'angka yang boleh dimasukkan hanya 1-{len(menus)} !\n')
+                input_invalid_out_of_range_message(menus)
                 to_do_menu(data,item_links)
                 return
             
             else:
-                to_do.pop(no_urut_task-1)
-                write_json_file('to_do.json',to_do)
+                try:
+                    to_do.pop(no_urut_tugas-1)
+                    write_json_file('to_do.json',to_do)
 
-                print('task berhasil dihapus')
+                    print('tugas berhasil dihapus dari daftar tugas terbaru')
+                except IndexError:
+                    input_invalid_out_of_range_message(to_do)
+                    to_do_menu(data,item_links)
+                    return
+                
                 show_to_do(to_do)
                 to_do_menu(data,item_links)
 
-        # hapus semua task
+        # hapus semua tugas
         if( user_input == 2 ):
             to_do = []
             write_json_file('to_do.json',to_do)
 
-            print('-----------------------------')
-            print('seluruh task berhasil dihapus')
-            print('-----------------------------')
+            print('\n--------------------------------------------------------')
+            print('seluruh tugas berhasil dihapus dari daftar tugas terbaru')
+            print('--------------------------------------------------------\n')
             to_do_menu(data,item_links)
         
         else:
@@ -189,50 +237,52 @@ def to_do_menu(data,item_links):
 
 def show_to_do(to_do):
     for index,i in enumerate(to_do):
-        tasks_str = ''.join([f'\t-Task Name : {el["task_name"]}\n\t-Task Link : {el["task_link"]}\n\n' for el in i["tasks"]])
-        i_str = f'{index+1}.\ncourse name : {i["course_name"]}\nitem name : {i["item_name"]}\ntasks : \n{tasks_str}'
+        tasks_str = ''.join([f'\t-nama tugas : {el["task_name"]}\n\t-tautan tugas : {el["task_link"]}\n\n' for el in i["tasks"]])
+        i_str = f'{index+1}.\nmatakuliah : {i["course_name"].replace("_"," " ).upper()}\njudul tugas : {i["item_name"]}\ntugas : \n{tasks_str}'
         print(i_str)
 
 def show_course_list(course_list):
+    print('\n----------------------------------DAFTAR MATAKULIAH----------------------------------\nberikut daftar matakuliah yang diikuti sesuai dengan yang terdapat di website vclass :\n')
     for index,i in enumerate(course_list):
-        i_str = f'{index+1}.\nItem Title : {i["item_title"]}\nItem Name : {i["item_name"]}\nItem Link : {i["item_link"]}\nDirectory Name : {i["directory_name"]}\n'
+        i_str = f'{index+1}.\nNama Matakuliah : {i["item_name"]}\nTautan Matakuliah : {i["item_link"]}\n'
         print(i_str)
 
 def show_empty_to_do_message():
-    print('-------------------')
-    print('belum ada task baru')
-    print('-------------------')
+    print('\n-----------------------------------------------------')
+    print('belum ada task baru, pilih menu "5. cek tugas terbaru"')
+    print('untuk mengecek tugas terbaru')
+    print('-----------------------------------------------------\n')
 
 def show_empty_course_list_message():
-    print('------------------')
+    print('\n------------------')
     print('course list kosong')
-    print('------------------')
+    print('------------------\n')
 
 def tasks_menu():
     print('')
     course_list  = read_json_file('course_list.json')
     menus = [i["item_name"] for i in course_list]
     menus_str = ''.join([(f'\n  {index+1}. {i}') for index,i in enumerate(menus)])
-    title = '==========tasks menu=========='.upper()
+    title = '\n==========tasks menu=========='.upper()
     print(f'{title}{menus_str}')
-    print('==================================')
+    print('==================================\n')
     user_input = ''
     try:
         user_input = int(input('masukkan nomor urut dari course yg tasks-nya ingin ditampilkan : '))
     except ValueError:
-        print(f'input salah!, tidak menerima input selain angka\n')
+        input_invalid_other_than_number_message()
         tasks_menu()
         return
 
     available_input = [i for i in range(1,len(menus)+1)]
 
     if( not (user_input in available_input) ):
-        print(f'angka yang boleh dimasukkan hanya 1-{len(menus)} !\n')
+        input_invalid_out_of_range_message(menus)
         tasks_menu()
         return
     
     else:
-        print(f'selected menu -> "{user_input}. {menus[user_input-1]}"')
+        print(f'\nmenu yang dipilih -> "{user_input}. {menus[user_input-1]}"\n')
 
         show_tasks(user_input)
 
@@ -245,4 +295,22 @@ def show_tasks(index):
     item_name = course_list[index-1]["item_name"]
     print(f'----------------------------------\n{item_name.upper()}\n')
     print(tasks)
-    print('----------------------------------')
+    print('----------------------------------\n')
+
+def input_invalid_other_than_number_message():
+    print('\n-----------------------------------------------')
+    print(f'input salah!, tidak menerima input selain angka')
+    print('-----------------------------------------------\n')
+
+def input_invalid_out_of_range_message(menus):
+    print('\n------------------------------------------------')
+    if(len(menus)>1):
+        print(f'angka yang boleh dimasukkan hanya angka 1-{len(menus)}!')
+    else:
+        print(f'angka yang boleh dimasukkan hanya angka 1!')
+    print('------------------------------------------------\n')
+
+def check_your_connection_message():
+    print('\n-----------------------------------------------------------------')
+    print('untuk menjalankan menu ini, pastikan perangkat terhubung dengan\nkoneksi internet yang stabil terlebih dahulu!')
+    print('-----------------------------------------------------------------\n')

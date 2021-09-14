@@ -1,10 +1,9 @@
-from requests import Session
+import requests,os
 from bs4 import BeautifulSoup as bs
-import os
 
 def get_home_page_content():
 
-    with Session() as s:
+    with requests.Session() as s:
 
         login_page_url = 'https://v-class.gunadarma.ac.id/login/index.php'
         home_page_url = 'https://v-class.gunadarma.ac.id/my/'

@@ -1,13 +1,12 @@
-from requests import Session
+import requests,os
 from bs4 import BeautifulSoup as bs
-import os
 
 from get_course_page_info import get_course_page_info
 from utility_functions import write_txt_file
 
 def get_course_page_content(course_links):
 
-    with Session() as s:
+    with requests.Session() as s:
 
         login_page_url = 'https://v-class.gunadarma.ac.id/login/index.php'
         home_page_url = 'https://v-class.gunadarma.ac.id/my/'
