@@ -1,4 +1,4 @@
-import json,os,webbrowser,requests
+import json,os,webbrowser,requests,sys
 
 from get_home_page_content import get_home_page_content 
 from get_course_list import get_course_list 
@@ -140,9 +140,12 @@ def main_menu(data,item_links):
         elif(user_input == 7):
 
             cwd = os.getcwd()
-            url = input('masukkan url yg ingin dituju : ')
+            url = input('masukkan tautan yg ingin dituju : ')
 
-            os.chdir("C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python37\\Scripts")
+            python_path = sys.executable.split('\\')
+            python_path[len(python_path)-1] = 'Scripts'
+
+            os.chdir('\\'.join(python_path))
 
             webbrowser.open(url)
             print('membuka tautan...')
@@ -196,9 +199,6 @@ def to_do_menu(data,item_links):
                 input_invalid_other_than_number_message()
                 to_do_menu(data,item_links)
                 return
-            
-            
-
 
             available_input = [ i for i in range(1,len(to_do)+1) ]
 
@@ -248,27 +248,27 @@ def show_course_list(course_list):
         print(i_str)
 
 def show_empty_to_do_message():
-    print('\n-----------------------------------------------------')
-    print('belum ada task baru, pilih menu "5. cek tugas terbaru"')
+    print('\n-----------------------------------------------------------')
+    print('belum ada tugas terbaru, pilih menu "5. cek tugas terbaru"')
     print('untuk mengecek tugas terbaru')
-    print('-----------------------------------------------------\n')
+    print('-----------------------------------------------------------\n')
 
 def show_empty_course_list_message():
-    print('\n------------------')
-    print('course list kosong')
-    print('------------------\n')
+    print('\n------------------------')
+    print('daftar mata kuliah kosong')
+    print('------------------------\n')
 
 def tasks_menu():
     print('')
     course_list  = read_json_file('course_list.json')
     menus = [i["item_name"] for i in course_list]
     menus_str = ''.join([(f'\n  {index+1}. {i}') for index,i in enumerate(menus)])
-    title = '\n==========tasks menu=========='.upper()
+    title = '\n==========menu daftar tugas=========='.upper()
     print(f'{title}{menus_str}')
     print('==================================\n')
     user_input = ''
     try:
-        user_input = int(input('masukkan nomor urut dari course yg tasks-nya ingin ditampilkan : '))
+        user_input = int(input('masukkan nomor urut dari matakuliah yg daftar tugas nya ingin ditampilkan : '))
     except ValueError:
         input_invalid_other_than_number_message()
         tasks_menu()

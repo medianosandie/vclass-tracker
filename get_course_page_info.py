@@ -31,7 +31,7 @@ def get_course_page_info(course_page_content):
     course_items_str = ''
     for course_item in course_items:
         tasks_str = ''.join([f'\n\t-{i["task_name"]} : {i["task_link"]}' for i in course_item['tasks']])
-        course_items_str = course_items_str + (f"{index}.\nitem name : {course_item['item_name']}\ntasks : {tasks_str}\n\n")
+        course_items_str = course_items_str + (f"{index}.\nJudul Tugas : {course_item['item_name']}\nTugas : {tasks_str}\n\n")
         index = index + 1
 
     directory_name = soup.select(".page-header-headings h1")[0].get_text()
