@@ -83,7 +83,7 @@ def main_menu(data,item_links):
         elif(user_input == 4):
 
             if( os.path.exists('course-info') ):
-                tasks_menu()
+                tasks_menu(data,item_links)
             else:
                 print('\n--------------------------------------')
                 print('cek halaman matakuliah terlebih dahulu') 
@@ -258,7 +258,7 @@ def show_empty_course_list_message():
     print('daftar mata kuliah kosong')
     print('------------------------\n')
 
-def tasks_menu():
+def tasks_menu(data,item_links):
     print('')
     course_list  = read_json_file('course_list.json')
     menus = [i["item_name"] for i in course_list]
@@ -271,20 +271,27 @@ def tasks_menu():
         user_input = int(input('masukkan nomor urut dari matakuliah yg daftar tugas nya ingin ditampilkan : '))
     except ValueError:
         input_invalid_other_than_number_message()
-        tasks_menu()
+        tasks_menu(data,item_links)
         return
 
     available_input = [i for i in range(1,len(menus)+1)]
 
     if( not (user_input in available_input) ):
         input_invalid_out_of_range_message(menus)
-        tasks_menu()
+        tasks_menu(data,item_links)
         return
     
     else:
         print(f'\nmenu yang dipilih -> "{user_input}. {menus[user_input-1]}"\n')
-
-        show_tasks(user_input)
+        try:
+            show_tasks(user_input)
+        except FileNotFoundError:
+            print('----------------------------------------------------------')
+            print('cek halaman matakuliah terlebih dahulu dengan memilih menu\n "3. cek halaman matakuliah" agar dapat menampilkan daftar tugas')
+            print('----------------------------------------------------------')
+            main_menu(data,item_links)
+            return
+        
 
 def show_tasks(index):
     course_list  = read_json_file('course_list.json')
