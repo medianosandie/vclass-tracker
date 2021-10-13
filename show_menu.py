@@ -4,7 +4,7 @@ from get_home_page_content import get_home_page_content
 from get_course_list import get_course_list 
 from get_course_page_content import get_course_page_content 
 from compare_tasks import compare_tasks
-from utility_functions import write_json_file,read_json_file,read_txt_file
+from utility_functions import write_json_file,read_json_file
 
 def main_menu(data,item_links):
     menus = ['perbarui daftar matakuliah','tampilkan daftar matakuliah','cek halaman matakuliah','tampilkan daftar tugas','cek tugas terbaru','tampilkan daftar tugas terbaru','buka tautan','keluar']
@@ -142,10 +142,12 @@ def main_menu(data,item_links):
             cwd = os.getcwd()
             url = input('masukkan tautan yg ingin dituju : ')
 
-            python_path = sys.executable.split('\\')
-            python_path[len(python_path)-1] = 'Scripts'
+            # python_path = sys.executable.split('\\')
+            # python_path[len(python_path)-1] = 'Scripts'
 
-            os.chdir('\\'.join(python_path))
+            # os.chdir('\\'.join(python_path))
+
+            os.chdir("C:\\Users\\User\\AppData\\Local\\Programs\\Python\\Python37\\Scripts")
 
             webbrowser.open(url)
             print('membuka tautan...')
@@ -236,16 +238,28 @@ def to_do_menu(data,item_links):
             return
 
 def show_to_do(to_do):
+    ask_for_input = True
     for index,i in enumerate(to_do):
-        tasks_str = ''.join([f'\t-nama tugas : {el["task_name"]}\n\t-tautan tugas : {el["task_link"]}\n\n' for el in i["tasks"]])
-        i_str = f'{index+1}.\nmatakuliah : {i["course_name"].replace("_"," " ).upper()}\njudul tugas : {i["item_name"]}\ntugas : \n{tasks_str}'
+        tasks_str = ''.join([f' |----Nama Tugas   : {el["task_name"]}\n |----Tautan Tugas : {el["task_link"]}\n |\n' for el in i["tasks"]])
+        i_str = f'\n{index+1}.\nJudul Tugas : {i["item_name"]}\nTugas : \n{tasks_str}'
         print(i_str)
 
+        if(ask_for_input and not (index == len(to_do)-1) ):
+            ask_for_input = ask_for_show_output_mode(ask_for_input)
+        else:
+            pass
+
 def show_course_list(course_list):
+    ask_for_input = True
     print('\n----------------------------------DAFTAR MATAKULIAH----------------------------------\nberikut daftar matakuliah yang diikuti sesuai dengan yang terdapat di website vclass :\n')
     for index,i in enumerate(course_list):
         i_str = f'{index+1}.\nNama Matakuliah : {i["item_name"]}\nTautan Matakuliah : {i["item_link"]}\n'
         print(i_str)
+
+        if(ask_for_input and not (index == len(course_list)-1) ):
+            ask_for_input = ask_for_show_output_mode(ask_for_input)
+        else:
+            pass
 
 def show_empty_to_do_message():
     print('\n-----------------------------------------------------------')
@@ -294,15 +308,25 @@ def tasks_menu(data,item_links):
         
 
 def show_tasks(index):
+    ask_for_input = True
+
     course_list  = read_json_file('course_list.json')
     directory_name = course_list[index-1]["directory_name"]
-    txt_file_path = f'course-info/{directory_name}/{directory_name}_info.txt'
-    tasks = read_txt_file(txt_file_path)
+    json_path = f'course-info/{directory_name}/{directory_name}_info_latest.json'
+    tasks = read_json_file(json_path)
+    for index,i in enumerate(tasks):
+        tasks_str = ''.join([f' |----Nama Tugas   : {el["task_name"]}\n |----Tautan Tugas : {el["task_link"]}\n |\n' for el in i["tasks"]])
+        i_str = f'\n{index+1}.\nJudul Tugas : {i["item_name"]}\nTugas : \n{tasks_str}'
+        print(i_str)
 
-    item_name = course_list[index-1]["item_name"]
-    print(f'----------------------------------\n{item_name.upper()}\n')
-    print(tasks)
-    print('----------------------------------\n')
+        if(ask_for_input and not (index == len(tasks)-1) ):
+            ask_for_input = ask_for_show_output_mode(ask_for_input)
+        else:
+            pass
+
+    print('--------------------------------------------------------------------\n')
+
+
 
 def input_invalid_other_than_number_message():
     print('\n-----------------------------------------------')
@@ -321,3 +345,17 @@ def check_your_connection_message():
     print('\n-----------------------------------------------------------------')
     print('untuk menjalankan menu ini, pastikan perangkat terhubung dengan\nkoneksi internet yang stabil terlebih dahulu!')
     print('-----------------------------------------------------------------\n')
+
+def ask_for_show_output_mode(ask_for_input):
+    user_input = input('masukkan input "N" untuk menampilkan output selanjutnya \natau masukkan "E" untuk menampilkan seluruh output : ')
+    ask_for_input
+    if(user_input == 'N' or user_input == 'n' ):
+        ask_for_input = True
+    elif(user_input == 'E' or user_input == 'e' ):
+        ask_for_input = False
+    else:
+        print('\n\ninput yang anda masukkan salah!, masukkan antara "n" atau "e"\n\n') 
+        ask_for_show_output_mode()
+        return
+
+    return ask_for_input
